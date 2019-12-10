@@ -2,6 +2,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import ketai.sensors.*;
 import ketai.net.nfc.*;
+import android.hardware.SensorManager;
+import android.hardware.SensorEvent;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Vibrator;
@@ -53,7 +55,7 @@ private class Phone
                   
 }
 
-Phone nikhilPhone = new Phone(2880, 1440, 5, 4, -.23, .23, .15, -.30); 
+Phone nikhilPhone = new Phone(2880, 1440, 5, 2, -.23, .23, .15, -.30); 
 
 int trialCount = 5; //this will be set higher for the bakeoff
 int trialIndex = 0;
@@ -72,7 +74,7 @@ void setup() {
    
   sensor = new KetaiSensor(this);
   sensor.start();
-  
+  sensor.setSamplingRate(SensorManager.SENSOR_DELAY_FASTEST);
   accelerometer = new PVector();
   gyro = new PVector();
   rotVector = new PVector();
@@ -103,7 +105,7 @@ void draw() {
   //println("light val: " + light +", cursor accel vals: " + cursorX +"/" + cursorY);
   background(80); //background is light grey
 
-
+  countDownTimerWait = max(0, countDownTimerWait - 1);
   if (startTime == 0)
     startTime = millis();
 
@@ -164,18 +166,12 @@ void draw() {
         drawArrow(100, height/2, 100, 180);
     }
   }
-  else {
+  else if(stage == 2) {
     if(curTarget.action == 1 && light > curPhone.lightThreshold)
       text("COVER LIGHT SENSOR", width/2, height/2);
     else {
       text("HIT", width/2, height /2);
     }
-  }
-  
-  if(stage == 1) {
-    stageOne();
-  } else {
-    stageTwo();
   }
 }
 
@@ -189,44 +185,57 @@ void drawArrow(int cx, int cy, int len, float angle){
   popMatrix();
 }
 
-void stageOne() {
-  Target curTarget = targets.get(trialIndex);
-  if(gyro.y > curPhone.accelThreshold && rotVector.y > curPhone.forwardRotThreshold) {
-    stageOnePassed = curTarget.target == 0;
-    stage = 2;
-  } 
-  else if(gyro.x > curPhone.accelThreshold && rotVector.x > curPhone.rightRotThreshold) {
-    stageOnePassed = curTarget.target == 1;
-    stage = 2;
-  }
-  else if(gyro.y < -curPhone.accelThreshold && rotVector.y < curPhone.backRotThreshold) {
-    stageOnePassed = curTarget.target == 2;
-    stage = 2;
-  }
-  else if(gyro.x < -curPhone.accelThreshold && rotVector.x < curPhone.leftRotThreshold) {
-    stageOnePassed = curTarget.target == 3;
-    stage = 2;
+void stageOneUpdate() {
+  if(stage == 1 && countDownTimerWait == 0) {
+    Target curTarget = targets.get(trialIndex); 
+    if(curTarget == null)
+      return;  
+    if(gyro.y > curPhone.accelThreshold && rotVector.y > curPhone.forwardRotThreshold) {
+      stageOnePassed = curTarget.target == 0;
+      stage = 2;
+      countDownTimerWait = 10;
+    } 
+    else if(gyro.x > curPhone.accelThreshold && rotVector.x > curPhone.rightRotThreshold) {
+      stageOnePassed = curTarget.target == 1;
+      stage = 2;
+      countDownTimerWait = 10;
+    }
+    else if(gyro.y < -curPhone.accelThreshold && rotVector.y < curPhone.backRotThreshold) {
+      stageOnePassed = curTarget.target == 2;
+      stage = 2;
+      countDownTimerWait = 10;
+    }
+    else if(gyro.x < -curPhone.accelThreshold && rotVector.x < curPhone.leftRotThreshold) {
+      stageOnePassed = curTarget.target == 3;
+      stage = 2;
+      countDownTimerWait = 10;
+    }
   }
 }
 
-void stageTwo() {
-  int curAction = targets.get(trialIndex).action;
-  if(curAction == 1 && light > curPhone.lightThreshold) {
-    vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
-  }
-  
-  if(accelerometer.z < -4) {
-    if(stageOnePassed) {
-      if(curAction == 0 && light > curPhone.lightThreshold || 
-          curAction == 1 && light < curPhone.lightThreshold) {
-        trialIndex++;
-        stageOnePassed = false;
+void stageTwoUpdate() {
+  if(stage == 2 && countDownTimerWait == 0) {
+    Target curTarget = targets.get(trialIndex);
+    if(curTarget == null)
+      return;
+      
+    if(curTarget.action == 1 && light > curPhone.lightThreshold) 
+      vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)); 
+      
+    if(accelerometer.z < -4) {
+      if(stageOnePassed) {
+        if(curTarget.action == 0 && light > curPhone.lightThreshold || 
+            curTarget.action == 1 && light < curPhone.lightThreshold) {
+          trialIndex++;
+          stageOnePassed = false;
+        }
+      } 
+      else {
+         trialIndex = max(trialIndex - 1, 0);
       }
-    } 
-    else {
-       trialIndex = max(trialIndex - 1, 0);
+      countDownTimerWait = 10;
+      stage = 1;
     }
-    stage = 1;
   }
 }
 
@@ -234,31 +243,30 @@ void stageTwo() {
 void onGyroscopeEvent(float x, float y, float z)
 {
   gyro.set(x, y, z);
+  stageOneUpdate();
 }
 
 void onLightEvent(float v) //this just updates the light value
 {
-  light = v; //update global variable
+  light = v;
+  stageTwoUpdate();
 }
 
 void onProximityEvent(float v) 
 {
   proximity = v;
 }
+
 void onAccelerometerEvent(float x, float y, float z)
 {
-  accelerometer.set(x, y, z-9.8);
+  accelerometer.set(x, y, z);
+  stageTwoUpdate();
 }
 
 void onRotationVectorEvent(float x, float y, float z)
 {
   rotVector.set(x, y, z);
-}
-
-void onNFCEvent(String txt)
-{
-  print("AHHH");
-  nfcTag = txt;
+  stageOneUpdate();
 }
 
 public void onCreate(Bundle savedInstanceState) { 
