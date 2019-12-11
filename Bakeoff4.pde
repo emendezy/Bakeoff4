@@ -31,31 +31,30 @@ private class Target
 
 private class Phone
 {
-  int phoneWidth;
-  int phoneHeight;
   int lightThreshold;
   float accelThreshold;
+  float hitThreshold;
   float leftRotThreshold;
   float rightRotThreshold;
   float forwardRotThreshold;
   float backRotThreshold;
   
-  public Phone(int phoneWidth, int phoneHeight, int lightThreshold, float accelThreshold,
+  public Phone(int lightThreshold, float accelThreshold, float hitThreshold, 
                 float leftRotThreshold, float rightRotThreshold, float backRotThreshold, float forwardRotThreshold) 
   {
-    this.phoneWidth = phoneWidth;
-    this.phoneHeight = phoneHeight;
     this.lightThreshold = lightThreshold;
     this.accelThreshold = accelThreshold;
+    this.hitThreshold = hitThreshold;
     this.leftRotThreshold = leftRotThreshold;
     this.rightRotThreshold = rightRotThreshold;
     this.forwardRotThreshold = forwardRotThreshold; 
     this.backRotThreshold = backRotThreshold;
+
   }
                   
 }
 
-Phone nikhilPhone = new Phone(2880, 1440, 5, 2, -.23, .23, .15, -.30); 
+Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30); 
 
 int trialCount = 5; //this will be set higher for the bakeoff
 int trialIndex = 0;
@@ -222,7 +221,7 @@ void stageTwoUpdate() {
     if(curTarget.action == 1 && light > curPhone.lightThreshold) 
       vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)); 
       
-    if(accelerometer.z < -4) {
+    if(accelerometer.z < curPhone.hitThreshold) {
       if(stageOnePassed) {
         if(curTarget.action == 0 && light > curPhone.lightThreshold || 
             curTarget.action == 1 && light < curPhone.lightThreshold) {
