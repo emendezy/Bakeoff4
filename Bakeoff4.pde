@@ -164,30 +164,27 @@ void draw() {
   if(stage == 1) {
     stroke(255);
     if(curTarget.target == 0) {
-        text("TILT FORWARD", width/2, height/2);
-        drawArrow(width/2,100, 100, 270);
+        //text("TILT FORWARD", width/2, height/2);
+        drawArrow(width/2,height/2, 300, 270);
     } 
     else if(curTarget.target == 1) {
-        text("TILT RIGHT", width/2, height/2);
-        drawArrow(width-100, height/2, 100, 0);
+        //text("TILT RIGHT", width/2, height/2);
+        drawArrow(width/2, height/2, 300, 0);
     } 
     else if(curTarget.target == 2) {
-        text("TILT BACK", width/2, height/2);
-        drawArrow(width/2, height-100, 100, 90);
+        //text("TILT BACK", width/2, height/2);
+        drawArrow(width/2, height/2, 300, 90);
     } 
     else {
-        text("TILT LEFT", width/2, height/2);
-        drawArrow(100, height/2, 100, 180);
+        //text("TILT LEFT", width/2, height/2);
+        drawArrow(height/2, height/2, 300, 180);
     }
   }
   else if(stage == 2) {
     if(curTarget.action == 1)// && light > curPhone.lightThreshold)
-      text("COVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
+      text("COVER \n" + "And Shake down", width/2, height/2);
     else if(curTarget.action == 0)// && light < curPhone.lightThreshold)
-      text("UNCOVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
-    else {
-      text("HIT", width/2, height /2);
-    }
+      text("UNCOVER \n" + "And Shake down", width/2, height/2);
   }
 }
 
@@ -195,9 +192,10 @@ void drawArrow(int cx, int cy, int len, float angle){
   pushMatrix();
   translate(cx, cy);
   rotate(radians(angle));
+  strokeWeight(40);
   line(0,0,len, 0);
-  line(len, 0, len - 8, -8);
-  line(len, 0, len - 8, 8);
+  line(len, 0, len - len/8, -20);
+  line(len, 0, len - len/8, 20);
   popMatrix();
 }
 
@@ -236,7 +234,8 @@ void stageTwoUpdate() {
     if(curTarget == null)
       return;
       
-    if(curTarget.action == 1 && light > curPhone.lightThreshold) 
+    if((curTarget.action == 1 && light > curPhone.lightThreshold) || 
+        (curTarget.action == 0 && light < curPhone.lightThreshold)) 
       vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)); 
     
     println("The Z accelerometer is - " + accelerometer.z + " Hit threshold - " + curPhone.hitThreshold);
