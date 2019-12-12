@@ -32,18 +32,18 @@ private class Target
 private class Phone
 {
   int lightThreshold;
-  float accelThreshold;
+  float gyroThreshold;
   float hitThreshold;
   float leftRotThreshold;
   float rightRotThreshold;
   float forwardRotThreshold;
   float backRotThreshold;
   
-  public Phone(int lightThreshold, float accelThreshold, float hitThreshold, 
+  public Phone(int lightThreshold, float gyroThreshold, float hitThreshold, 
                 float leftRotThreshold, float rightRotThreshold, float backRotThreshold, float forwardRotThreshold) 
   {
     this.lightThreshold = lightThreshold;
-    this.accelThreshold = accelThreshold;
+    this.gyroThreshold = gyroThreshold;
     this.hitThreshold = hitThreshold;
     this.leftRotThreshold = leftRotThreshold;
     this.rightRotThreshold = rightRotThreshold;
@@ -54,7 +54,8 @@ private class Phone
                   
 }
 
-Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30); 
+Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
+Phone ericPhone = new Phone(3, 2, -4, -.13, .13, .1, -.20);
 
 int trialCount = 5; //this will be set higher for the bakeoff
 int trialIndex = 0;
@@ -66,8 +67,11 @@ boolean userDone = false;
 int countDownTimerWait = 0;
 
 void setup() {
-  curPhone = nikhilPhone;
-  size(2880, 1440); //you can change this to be fullscreen
+  trialIndex = 0;
+  //curPhone = nikhilPhone;
+  //size(2880, 1440); //you can change this to be fullscreen
+  curPhone = ericPhone;
+  size(2280, 1080);
   //frameRate(30);
   orientation(LANDSCAPE);
    
@@ -103,8 +107,13 @@ void draw() {
   //uncomment line below to see if sensors are updating
   //println("light val: " + light +", cursor accel vals: " + cursorX +"/" + cursorY);
   background(80); //background is light grey
-
-  countDownTimerWait = max(0, countDownTimerWait - 1);
+  
+  if(countDownTimerWait > 0)
+  {
+    countDownTimerWait--;
+    println("%%%%%%%%%%% countdown timer changing - " + countDownTimerWait);
+  }
+    
   if (startTime == 0)
     startTime = millis();
 
@@ -131,17 +140,18 @@ void draw() {
   
   //debug output only, slows down rendering
   /*text("light:" + int(light) + "\n"
-        + "proximity" + int(proximity) + "\n"
+        + "stage: " + stage + "\n"
+        + "proximity: " + int(proximity) + "\n"
         + "accelX: " + nfp(accelerometer.x, 1, 2) + "\n" 
         + "accelY: " + nfp(accelerometer.y, 1, 2) + "\n" 
-        + "accelZ: " + nfp(accelerometer.z, 1, 2) + "\n"
+        + "------------accelZ: " + nfp(accelerometer.z, 1, 2) + "\n"
         + "gyroX: " + nfp(gyro.x, 1, 2) + "\n" 
         + "gyroY: " + nfp(gyro.y, 1, 2) + "\n" 
         + "gryoZ: " + nfp(gyro.z, 1, 2) + "\n"
         + "rotX: " + nfp(rotVector.x, 1, 2) + "\n" 
         + "rotY: " + nfp(rotVector.y, 1, 2) + "\n" 
         + "rotZ: " + nfp(rotVector.z, 1, 2) + "\n"
-        + "nfcTag: " + nfcTag, width/2, 100);*/
+        + "nfcTag: " + nfcTag, width/4, 100);*/
   //text("z-axis accel: " + nf(accel,0,1), width/2, height-50); //use this to check z output!
   //text("touching target #" + hitTest(), width/2, height-150); //use this to check z output!
   
@@ -166,11 +176,13 @@ void draw() {
     }
   }
   else if(stage == 2) {
-    if(curTarget.action == 1 && light > curPhone.lightThreshold)
-      text("COVER LIGHT SENSOR", width/2, height/2);
-    else {
-      text("HIT", width/2, height /2);
-    }
+    if(curTarget.action == 1)// && light > curPhone.lightThreshold)
+      text("COVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
+    else if(curTarget.action == 0)// && light < curPhone.lightThreshold)
+      text("UNCOVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
+    //else {
+    //  text("HIT", width/2, height /2);
+    //}
   }
 }
 
@@ -189,26 +201,27 @@ void stageOneUpdate() {
     Target curTarget = targets.get(trialIndex); 
     if(curTarget == null)
       return;  
-    if(gyro.y > curPhone.accelThreshold && rotVector.y > curPhone.forwardRotThreshold) {
+    if(gyro.y > curPhone.gyroThreshold && rotVector.y > curPhone.forwardRotThreshold) {
       stageOnePassed = curTarget.target == 0;
       stage = 2;
       countDownTimerWait = 10;
     } 
-    else if(gyro.x > curPhone.accelThreshold && rotVector.x > curPhone.rightRotThreshold) {
+    else if(gyro.x > curPhone.gyroThreshold && rotVector.x > curPhone.rightRotThreshold) {
       stageOnePassed = curTarget.target == 1;
       stage = 2;
       countDownTimerWait = 10;
     }
-    else if(gyro.y < -curPhone.accelThreshold && rotVector.y < curPhone.backRotThreshold) {
+    else if(gyro.y < -curPhone.gyroThreshold && rotVector.y < curPhone.backRotThreshold) {
       stageOnePassed = curTarget.target == 2;
       stage = 2;
       countDownTimerWait = 10;
     }
-    else if(gyro.x < -curPhone.accelThreshold && rotVector.x < curPhone.leftRotThreshold) {
+    else if(gyro.x < -curPhone.gyroThreshold && rotVector.x < curPhone.leftRotThreshold) {
       stageOnePassed = curTarget.target == 3;
       stage = 2;
       countDownTimerWait = 10;
     }
+    println("Stage 1 passed - " + stageOnePassed);
   }
 }
 
@@ -223,15 +236,18 @@ void stageTwoUpdate() {
       
     if(accelerometer.z < curPhone.hitThreshold) {
       if(stageOnePassed) {
-        if(curTarget.action == 0 && light > curPhone.lightThreshold || 
-            curTarget.action == 1 && light < curPhone.lightThreshold) {
+        if((curTarget.action == 0 && light > curPhone.lightThreshold) || 
+            (curTarget.action == 1 && light < curPhone.lightThreshold)) {
           trialIndex++;
           stageOnePassed = false;
+          println("Done with stage 2, trial index increased to " + trialIndex);
+          //stage = 1;
+          //countDownTimerWait = 10;
         }
       } 
-      else {
-         trialIndex = max(trialIndex - 1, 0);
-      }
+      //else {
+      //   trialIndex = max(trialIndex - 1, 0);
+      //} 
       countDownTimerWait = 10;
       stage = 1;
     }
