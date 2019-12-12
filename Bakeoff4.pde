@@ -20,8 +20,8 @@ String nfcTag = "";
 PVector accelerometer, gyro, rotVector;
 float light = 0;
 float proximity = 0;
-int stage = 1;
-boolean stageOnePassed = false;
+int stage;
+boolean stageOnePassed;
 
 private class Target
 {
@@ -55,7 +55,7 @@ private class Phone
 }
 
 Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
-Phone ericPhone = new Phone(3, 2, -4, -.13, .13, .1, -.20);
+Phone ericPhone = new Phone(6, 4, 13, -.13, .13, .1, -.20);
 
 int trialCount = 5; //this will be set higher for the bakeoff
 int trialIndex = 0;
@@ -67,6 +67,11 @@ boolean userDone = false;
 int countDownTimerWait = 0;
 
 void setup() {
+  //nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
+  //ericPhone = new Phone(3, .5, -4, -.13, .13, .1, -.20);
+  stageOnePassed = false;
+  stage = 1; 
+  
   trialIndex = 0;
   //curPhone = nikhilPhone;
   //size(2880, 1440); //you can change this to be fullscreen
@@ -180,9 +185,9 @@ void draw() {
       text("COVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
     else if(curTarget.action == 0)// && light < curPhone.lightThreshold)
       text("UNCOVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
-    //else {
-    //  text("HIT", width/2, height /2);
-    //}
+    else {
+      text("HIT", width/2, height /2);
+    }
   }
 }
 
@@ -233,21 +238,21 @@ void stageTwoUpdate() {
       
     if(curTarget.action == 1 && light > curPhone.lightThreshold) 
       vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)); 
-      
-    if(accelerometer.z < curPhone.hitThreshold) {
+    
+    println("The Z accelerometer is - " + accelerometer.z + " Hit threshold - " + curPhone.hitThreshold);
+    println("Stage 1 passed: " + stageOnePassed + " stage = " + stage);
+    if((accelerometer.z > curPhone.hitThreshold && curPhone == ericPhone) || (accelerometer.z < curPhone.hitThreshold && curPhone == nikhilPhone)) {
       if(stageOnePassed) {
         if((curTarget.action == 0 && light > curPhone.lightThreshold) || 
             (curTarget.action == 1 && light < curPhone.lightThreshold)) {
           trialIndex++;
           stageOnePassed = false;
           println("Done with stage 2, trial index increased to " + trialIndex);
-          //stage = 1;
-          //countDownTimerWait = 10;
         }
       } 
-      //else {
-      //   trialIndex = max(trialIndex - 1, 0);
-      //} 
+      else {
+        trialIndex = max(trialIndex - 1, 0);
+      } 
       countDownTimerWait = 10;
       stage = 1;
     }
