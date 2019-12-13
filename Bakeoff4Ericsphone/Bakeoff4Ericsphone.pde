@@ -20,8 +20,8 @@ String nfcTag = "";
 PVector accelerometer, gyro, rotVector;
 float light = 0;
 float proximity = 0;
-int stage;
-boolean stageOnePassed;
+int stage = 1;
+boolean stageOnePassed = false;
 
 private class Target
 {
@@ -55,7 +55,7 @@ private class Phone
 }
 
 Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
-Phone ericPhone = new Phone(6, 4, 13, -.13, .13, .1, -.20);
+Phone ericPhone = new Phone(3, 1, 11, .13, .13, .1, .20);
 
 int trialCount = 5; //this will be set higher for the bakeoff
 int trialIndex = 0;
@@ -69,14 +69,12 @@ int countDownTimerWait = 0;
 void setup() {
   //nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
   //ericPhone = new Phone(3, .5, -4, -.13, .13, .1, -.20);
-  stageOnePassed = false;
-  stage = 1; 
   
   trialIndex = 0;
   //curPhone = nikhilPhone;
+  //size(2880, 1440); //you can change this to be fullscreen
   curPhone = ericPhone;
-  //size(2880, 1440); // for nikhil's phone
-  size(2000, 1000); // for eric's phone
+  size(2280, 1080);
   //frameRate(30);
   orientation(LANDSCAPE);
    
@@ -164,29 +162,30 @@ void draw() {
   if(stage == 1) {
     stroke(255);
     if(curTarget.target == 0) {
-        //text("TILT FORWARD", width/2, height/2);
-        drawArrow(width/2,height/2, 300, 270);
+        text("TILT FORWARD", width/2, height/2);
+        drawArrow(width/2,100, 100, 270);
     } 
     else if(curTarget.target == 1) {
-        //text("TILT RIGHT", width/2, height/2);
-        drawArrow(width/2, height/2, 300, 0);
+        text("TILT RIGHT", width/2, height/2);
+        drawArrow(width-100, height/2, 100, 0);
     } 
     else if(curTarget.target == 2) {
-        //text("TILT BACK", width/2, height/2);
-        drawArrow(width/2, height/2, 300, 90);
+        text("TILT BACK", width/2, height/2);
+        drawArrow(width/2, height-100, 100, 90);
     } 
     else {
-        //text("TILT LEFT", width/2, height/2);
-        drawArrow(width/2, height/2, 300, 180);
+        text("TILT LEFT", width/2, height/2);
+        drawArrow(100, height/2, 100, 180);
     }
   }
   else if(stage == 2) {
-    textSize(80);
     if(curTarget.action == 1)// && light > curPhone.lightThreshold)
-      text("COVER \n\n" + "And Shake down", width/2, height/2);
+      text("COVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
     else if(curTarget.action == 0)// && light < curPhone.lightThreshold)
-      text("UNCOVER \n" + "And Shake down", width/2, height/2);
-    textSize(46);
+      text("UNCOVER LIGHT SENSOR AND SHAKE DOWNWARDS", width/2, height/2);
+    //else {
+    //  text("HIT", width/2, height /2);
+    //}
   }
 }
 
@@ -194,15 +193,14 @@ void drawArrow(int cx, int cy, int len, float angle){
   pushMatrix();
   translate(cx, cy);
   rotate(radians(angle));
-  strokeWeight(40);
   line(0,0,len, 0);
-  line(len, 0, len - len/8, -20);
-  line(len, 0, len - len/8, 20);
+  line(len, 0, len - 8, -8);
+  line(len, 0, len - 8, 8);
   popMatrix();
 }
 
 void stageOneUpdate() {
-  if(stage == 1 && countDownTimerWait == 0) {
+  if(stage == 1 && countDownTimerWait == 0 && !stageOnePassed) {
     Target curTarget = targets.get(trialIndex); 
     if(curTarget == null)
       return;  
@@ -216,17 +214,22 @@ void stageOneUpdate() {
       stage = 2;
       countDownTimerWait = 10;
     }
-    else if(gyro.y < -curPhone.gyroThreshold && rotVector.y < curPhone.backRotThreshold) {
+    else if(gyro.y > -curPhone.gyroThreshold && rotVector.y < curPhone.backRotThreshold) {
       stageOnePassed = curTarget.target == 2;
       stage = 2;
       countDownTimerWait = 10;
     }
-    else if(gyro.x < -curPhone.gyroThreshold && rotVector.x < curPhone.leftRotThreshold) {
+    else if(gyro.x > -curPhone.gyroThreshold && rotVector.x < curPhone.leftRotThreshold) {
       stageOnePassed = curTarget.target == 3;
+      println("StageOnePassed = " + stageOnePassed + " curTarget: " + (curTarget.target == 3));
       stage = 2;
       countDownTimerWait = 10;
     }
-    println("Stage 1 passed - " + stageOnePassed);
+    if(!stageOnePassed) { 
+      stage = 1;
+      countDownTimerWait = 10;
+    }
+    println("StageOnePassed = " + stageOnePassed + " curTarget: " + (curTarget.target == 3));  
   }
 }
 
@@ -236,24 +239,27 @@ void stageTwoUpdate() {
     if(curTarget == null)
       return;
       
-    if((curTarget.action == 1 && light > curPhone.lightThreshold) || 
-        (curTarget.action == 0 && light < curPhone.lightThreshold)) 
+    if(curTarget.action == 1 && light > curPhone.lightThreshold) 
       vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)); 
     
-    println("The Z accelerometer is - " + accelerometer.z + " Hit threshold - " + curPhone.hitThreshold);
-    println("Stage 1 passed: " + stageOnePassed + " stage = " + stage);
-    if((accelerometer.z > curPhone.hitThreshold && curPhone == ericPhone) || (accelerometer.z < curPhone.hitThreshold && curPhone == nikhilPhone)) {
+    //println("The Z accelerometer is - " + accelerometer.z + " Hit threshold - " + curPhone.hitThreshold);
+    if(accelerometer.z > curPhone.hitThreshold) {
+      println("currTarget.action: " + curTarget.action + " == 0?\n" + light + " > " + curPhone.lightThreshold + "? OR");
+      println("currTarget.action: " + curTarget.action + " == 1?\n" + light + " < " + curPhone.lightThreshold + "?");
       if(stageOnePassed) {
-        if((curTarget.action == 0 && light > curPhone.lightThreshold) || 
-            (curTarget.action == 1 && light < curPhone.lightThreshold)) {
+        if((curTarget.action == 0 && light > curPhone.lightThreshold) || (curTarget.action == 1 && light < curPhone.lightThreshold)) {
           trialIndex++;
-          stageOnePassed = false;
+          println("The Z accelerometer is - " + accelerometer.z + " Hit threshold - " + curPhone.hitThreshold);
+
+          //stageOnePassed = false;
           println("Done with stage 2, trial index increased to " + trialIndex);
+          stage = 1;
+          countDownTimerWait = 10;
         }
       } 
-      else {
-        trialIndex = max(trialIndex - 1, 0);
-      } 
+      //else {
+      //   trialIndex = max(trialIndex - 1, 0);
+      //} 
       countDownTimerWait = 10;
       stage = 1;
     }
@@ -263,8 +269,10 @@ void stageTwoUpdate() {
 //use gyro (rotation) to update angle
 void onGyroscopeEvent(float x, float y, float z)
 {
-  gyro.set(x, y, z);
-  stageOneUpdate();
+  if(stage == 1){
+    gyro.set(x, y, z);
+    stageOneUpdate();
+  }
 }
 
 void onLightEvent(float v) //this just updates the light value
