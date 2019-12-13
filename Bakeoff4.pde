@@ -4,8 +4,6 @@ import ketai.sensors.*;
 import ketai.net.nfc.*;
 import android.hardware.SensorManager;
 import android.hardware.SensorEvent;
-import android.content.Intent;
-import android.os.Bundle;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.app.Activity;
@@ -13,7 +11,6 @@ import android.content.Context;
 
 Phone curPhone;
 KetaiSensor sensor;
-KetaiNFC ketaiNFC;
 Activity act;
 Vibrator vib;
 String nfcTag = "";
@@ -38,23 +35,23 @@ private class Phone
   float rightRotThreshold;
   float forwardRotThreshold;
   float backRotThreshold;
-  
-  public Phone(int lightThreshold, float gyroThreshold, float hitThreshold, 
-                float leftRotThreshold, float rightRotThreshold, float backRotThreshold, float forwardRotThreshold) 
+
+  public Phone(int lightThreshold, float gyroThreshold, float hitThreshold,
+                float leftRotThreshold, float rightRotThreshold, float backRotThreshold, float forwardRotThreshold)
   {
     this.lightThreshold = lightThreshold;
     this.gyroThreshold = gyroThreshold;
     this.hitThreshold = hitThreshold;
     this.leftRotThreshold = leftRotThreshold;
     this.rightRotThreshold = rightRotThreshold;
-    this.forwardRotThreshold = forwardRotThreshold; 
+    this.forwardRotThreshold = forwardRotThreshold;
     this.backRotThreshold = backRotThreshold;
 
   }
-                  
+
 }
 
-Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
+Phone nikhilPhone = new Phone(5, 4, -4, -.23, .23, .15, -.30);
 Phone ericPhone = new Phone(6, 4, 13, -.13, .13, .1, -.20);
 
 int trialCount = 5; //this will be set higher for the bakeoff
@@ -67,11 +64,8 @@ boolean userDone = false;
 int countDownTimerWait = 0;
 
 void setup() {
-  //nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
-  //ericPhone = new Phone(3, .5, -4, -.13, .13, .1, -.20);
   stageOnePassed = false;
-  stage = 1; 
-  
+  stage = 1;
   trialIndex = 0;
   //curPhone = nikhilPhone;
   curPhone = ericPhone;
@@ -79,14 +73,14 @@ void setup() {
   size(2000, 1000); // for eric's phone
   //frameRate(30);
   orientation(LANDSCAPE);
-   
+
   sensor = new KetaiSensor(this);
   sensor.start();
   sensor.setSamplingRate(SensorManager.SENSOR_DELAY_FASTEST);
   accelerometer = new PVector();
   gyro = new PVector();
   rotVector = new PVector();
-  
+
   rectMode(CENTER);
   textFont(createFont("Arial", 40)); //sets the font to Arial size 20
   textAlign(CENTER);
@@ -100,7 +94,7 @@ void setup() {
     targets.add(t);
     //println("created target with " + t.target + "," + t.action);
   }
-  
+
   act = this.getActivity();
   vib = (Vibrator) act.getSystemService(Context.VIBRATOR_SERVICE);
   Collections.shuffle(targets); // randomize the order of the button;
@@ -112,13 +106,13 @@ void draw() {
   //uncomment line below to see if sensors are updating
   //println("light val: " + light +", cursor accel vals: " + cursorX +"/" + cursorY);
   background(80); //background is light grey
-  
+
   if(countDownTimerWait > 0)
   {
     countDownTimerWait--;
     println("%%%%%%%%%%% countdown timer changing - " + countDownTimerWait);
   }
-    
+
   if (startTime == 0)
     startTime = millis();
 
@@ -142,39 +136,38 @@ void draw() {
   text("Trial " + (index+1) + " of " +trialCount, width/2, 50);
   //text("Target #" + (targets.get(index).target), width/2, 100);
 
-  
+
   //debug output only, slows down rendering
   /*text("light:" + int(light) + "\n"
         + "stage: " + stage + "\n"
-        + "proximity: " + int(proximity) + "\n"
-        + "accelX: " + nfp(accelerometer.x, 1, 2) + "\n" 
-        + "accelY: " + nfp(accelerometer.y, 1, 2) + "\n" 
+        + "accelX: " + nfp(accelerometer.x, 1, 2) + "\n"
+        + "accelY: " + nfp(accelerometer.y, 1, 2) + "\n"
         + "------------accelZ: " + nfp(accelerometer.z, 1, 2) + "\n"
-        + "gyroX: " + nfp(gyro.x, 1, 2) + "\n" 
-        + "gyroY: " + nfp(gyro.y, 1, 2) + "\n" 
+        + "gyroX: " + nfp(gyro.x, 1, 2) + "\n"
+        + "gyroY: " + nfp(gyro.y, 1, 2) + "\n"
         + "gryoZ: " + nfp(gyro.z, 1, 2) + "\n"
-        + "rotX: " + nfp(rotVector.x, 1, 2) + "\n" 
-        + "rotY: " + nfp(rotVector.y, 1, 2) + "\n" 
-        + "rotZ: " + nfp(rotVector.z, 1, 2) + "\n"
-        + "nfcTag: " + nfcTag, width/4, 100);*/
+        + "rotX: " + nfp(rotVector.x, 1, 2) + "\n"
+        + "rotY: " + nfp(rotVector.y, 1, 2) + "\n"
+        + "rotZ: " + nfp(rotVector.z, 1, 2) + "\n",
+        width/4, 100);*/
   //text("z-axis accel: " + nf(accel,0,1), width/2, height-50); //use this to check z output!
   //text("touching target #" + hitTest(), width/2, height-150); //use this to check z output!
-  
+
   Target curTarget = targets.get(trialIndex);
   if(stage == 1) {
     stroke(255);
     if(curTarget.target == 0) {
         //text("TILT FORWARD", width/2, height/2);
         drawArrow(width/2,height/2, 300, 270);
-    } 
+    }
     else if(curTarget.target == 1) {
         //text("TILT RIGHT", width/2, height/2);
         drawArrow(width/2, height/2, 300, 0);
-    } 
+    }
     else if(curTarget.target == 2) {
         //text("TILT BACK", width/2, height/2);
         drawArrow(width/2, height/2, 300, 90);
-    } 
+    }
     else {
         //text("TILT LEFT", width/2, height/2);
         drawArrow(width/2, height/2, 300, 180);
@@ -203,14 +196,14 @@ void drawArrow(int cx, int cy, int len, float angle){
 
 void stageOneUpdate() {
   if(stage == 1 && countDownTimerWait == 0) {
-    Target curTarget = targets.get(trialIndex); 
+    Target curTarget = targets.get(trialIndex);
     if(curTarget == null)
-      return;  
+      return;
     if(gyro.y > curPhone.gyroThreshold && rotVector.y > curPhone.forwardRotThreshold) {
       stageOnePassed = curTarget.target == 0;
       stage = 2;
       countDownTimerWait = 10;
-    } 
+    }
     else if(gyro.x > curPhone.gyroThreshold && rotVector.x > curPhone.rightRotThreshold) {
       stageOnePassed = curTarget.target == 1;
       stage = 2;
@@ -235,25 +228,25 @@ void stageTwoUpdate() {
     Target curTarget = targets.get(trialIndex);
     if(curTarget == null)
       return;
-      
-    if((curTarget.action == 1 && light > curPhone.lightThreshold) || 
-        (curTarget.action == 0 && light < curPhone.lightThreshold)) 
-      vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE)); 
-    
+
+    if((curTarget.action == 1 && light > curPhone.lightThreshold) ||
+        (curTarget.action == 0 && light < curPhone.lightThreshold))
+      vib.vibrate(VibrationEffect.createOneShot(100, VibrationEffect.DEFAULT_AMPLITUDE));
+
     println("The Z accelerometer is - " + accelerometer.z + " Hit threshold - " + curPhone.hitThreshold);
     println("Stage 1 passed: " + stageOnePassed + " stage = " + stage);
     if((accelerometer.z > curPhone.hitThreshold && curPhone == ericPhone) || (accelerometer.z < curPhone.hitThreshold && curPhone == nikhilPhone)) {
       if(stageOnePassed) {
-        if((curTarget.action == 0 && light > curPhone.lightThreshold) || 
+        if((curTarget.action == 0 && light > curPhone.lightThreshold) ||
             (curTarget.action == 1 && light < curPhone.lightThreshold)) {
           trialIndex++;
           stageOnePassed = false;
           println("Done with stage 2, trial index increased to " + trialIndex);
         }
-      } 
+      }
       else {
         trialIndex = max(trialIndex - 1, 0);
-      } 
+      }
       countDownTimerWait = 10;
       stage = 1;
     }
@@ -273,11 +266,6 @@ void onLightEvent(float v) //this just updates the light value
   stageTwoUpdate();
 }
 
-void onProximityEvent(float v) 
-{
-  proximity = v;
-}
-
 void onAccelerometerEvent(float x, float y, float z)
 {
   accelerometer.set(x, y, z);
@@ -288,14 +276,4 @@ void onRotationVectorEvent(float x, float y, float z)
 {
   rotVector.set(x, y, z);
   stageOneUpdate();
-}
-
-public void onCreate(Bundle savedInstanceState) { 
-  super.onCreate(savedInstanceState);
-  ketaiNFC = new KetaiNFC(this);
-}
-
-public void onNewIntent(Intent intent) { 
-  if (ketaiNFC != null)
-    ketaiNFC.handleIntent(intent);
 }
