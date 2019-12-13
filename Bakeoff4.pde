@@ -54,7 +54,7 @@ private class Phone
                   
 }
 
-Phone nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
+Phone nikhilPhone = new Phone(5, 4, -4, -.23, .23, .15, -.30);
 Phone ericPhone = new Phone(6, 4, 13, -.13, .13, .1, -.20);
 
 int trialCount = 5; //this will be set higher for the bakeoff
