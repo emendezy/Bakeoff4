@@ -56,7 +56,7 @@ Phone ericPhone = new Phone(6, 4, 13, -.18, .18, .15, -.20);
 
 PImage coverLightSensorImg;
 
-int trialCount = 5; //this will be set higher for the bakeoff
+int trialCount = 15; //this will be set higher for the bakeoff
 int trialIndex = 0;
 ArrayList<Target> targets = new ArrayList<Target>();
 
