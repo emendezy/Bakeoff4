@@ -4,8 +4,6 @@ import ketai.sensors.*;
 import ketai.net.nfc.*;
 import android.hardware.SensorManager;
 import android.hardware.SensorEvent;
-import android.content.Intent;
-import android.os.Bundle;
 import android.os.Vibrator;
 import android.os.VibrationEffect;
 import android.app.Activity;
@@ -13,7 +11,6 @@ import android.content.Context;
 
 Phone curPhone;
 KetaiSensor sensor;
-KetaiNFC ketaiNFC;
 Activity act;
 Vibrator vib;
 String nfcTag = "";
@@ -67,16 +64,13 @@ boolean userDone = false;
 int countDownTimerWait = 0;
 
 void setup() {
-  //nikhilPhone = new Phone(5, 2, -4, -.23, .23, .15, -.30);
-  //ericPhone = new Phone(3, .5, -4, -.13, .13, .1, -.20);
   stageOnePassed = false;
   stage = 1; 
-  
   trialIndex = 0;
-  //curPhone = nikhilPhone;
-  //size(2880, 1440); //you can change this to be fullscreen
-  curPhone = ericPhone;
-  size(2280, 1080);
+  curPhone = nikhilPhone;
+  size(2880, 1440); //you can change this to be fullscreen
+  //curPhone = ericPhone;
+  //size(2280, 1080);
   //frameRate(30);
   orientation(LANDSCAPE);
    
@@ -146,7 +140,6 @@ void draw() {
   //debug output only, slows down rendering
   /*text("light:" + int(light) + "\n"
         + "stage: " + stage + "\n"
-        + "proximity: " + int(proximity) + "\n"
         + "accelX: " + nfp(accelerometer.x, 1, 2) + "\n" 
         + "accelY: " + nfp(accelerometer.y, 1, 2) + "\n" 
         + "------------accelZ: " + nfp(accelerometer.z, 1, 2) + "\n"
@@ -155,8 +148,8 @@ void draw() {
         + "gryoZ: " + nfp(gyro.z, 1, 2) + "\n"
         + "rotX: " + nfp(rotVector.x, 1, 2) + "\n" 
         + "rotY: " + nfp(rotVector.y, 1, 2) + "\n" 
-        + "rotZ: " + nfp(rotVector.z, 1, 2) + "\n"
-        + "nfcTag: " + nfcTag, width/4, 100);*/
+        + "rotZ: " + nfp(rotVector.z, 1, 2) + "\n", 
+        width/4, 100);*/
   //text("z-axis accel: " + nf(accel,0,1), width/2, height-50); //use this to check z output!
   //text("touching target #" + hitTest(), width/2, height-150); //use this to check z output!
   
@@ -271,11 +264,6 @@ void onLightEvent(float v) //this just updates the light value
   stageTwoUpdate();
 }
 
-void onProximityEvent(float v) 
-{
-  proximity = v;
-}
-
 void onAccelerometerEvent(float x, float y, float z)
 {
   accelerometer.set(x, y, z);
@@ -286,14 +274,4 @@ void onRotationVectorEvent(float x, float y, float z)
 {
   rotVector.set(x, y, z);
   stageOneUpdate();
-}
-
-public void onCreate(Bundle savedInstanceState) { 
-  super.onCreate(savedInstanceState);
-  ketaiNFC = new KetaiNFC(this);
-}
-
-public void onNewIntent(Intent intent) { 
-  if (ketaiNFC != null)
-    ketaiNFC.handleIntent(intent);
 }
