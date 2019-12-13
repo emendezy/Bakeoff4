@@ -52,7 +52,9 @@ private class Phone
 }
 
 Phone nikhilPhone = new Phone(5, 4, -4, -.23, .23, .15, -.30);
-Phone ericPhone = new Phone(6, 4, 13, -.13, .13, .1, -.20);
+Phone ericPhone = new Phone(6, 4, 13, -.18, .18, .15, -.20);
+
+PImage coverLightSensorImg;
 
 int trialCount = 5; //this will be set higher for the bakeoff
 int trialIndex = 0;
@@ -73,6 +75,8 @@ void setup() {
   size(2000, 1000); // for eric's phone
   //frameRate(30);
   orientation(LANDSCAPE);
+  
+  coverLightSensorImg = loadImage("thumbPhone.png");
 
   sensor = new KetaiSensor(this);
   sensor.start();
@@ -175,8 +179,10 @@ void draw() {
   }
   else if(stage == 2) {
     textSize(80);
-    if(curTarget.action == 1)// && light > curPhone.lightThreshold)
+    if(curTarget.action == 1) {// && light > curPhone.lightThreshold)
       text("COVER \n\n" + "And Shake down", width/2, height/2);
+      image(coverLightSensorImg, 50, 100, width/4, height/4);
+    }
     else if(curTarget.action == 0)// && light < curPhone.lightThreshold)
       text("UNCOVER \n" + "And Shake down", width/2, height/2);
     textSize(46);
